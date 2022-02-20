@@ -1,36 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const content = [
-	{
-		tab: "section 1",
-		content: "I'm the content of the section1 ",
-	},
-	{
-		tab: "section 2",
-		content: "I'm the content of the section2 ",
-	},
-];
-
-const useTabs = (initialTab, allTabs) => {
-	if (!allTabs || !Array.isArray(allTabs)) {
-		return;
-	}
-	const [currentIndex, setCurrentIndex] = useState(initialTab);
-	return { currentItem: allTabs[currentIndex], changeItem: setCurrentIndex };
+const useTitle = (initialTitle) => {
+	const [title, setTitle] = useState(initialTitle);
+	const udateTitle = () => {
+		const htmlTitle = document.querySelector("title");
+		htmlTitle.innerText = title;
+	};
+	useEffect(udateTitle, [title]);
+	return setTitle;
 };
 
 function App() {
-	const { currentItem, changeItem } = useTabs(1, content);
-	return (
-		<div className="App">
-			{content.map((section, index) => (
-				<button onClick={() => changeItem(index)} key={index}>
-					{section.tab}
-				</button>
-			))}
-			<div>{currentItem.content}</div>
-		</div>
-	);
+	const titleUpdator = useTitle("Loading...");
+	setTimeout(() => titleUpdator("Home"), 5000);
+	return <div className="App"></div>;
 }
 
 export default App;
