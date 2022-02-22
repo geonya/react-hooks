@@ -1,32 +1,56 @@
+import defaultAxios from "axios";
 import { useEffect, useState } from "react";
 
-const useNetwork = (onChange) => {
-	const [status, setStatus] = useState(navigator.onLine);
-	const handleChange = () => {
-		if (typeof onChange === "function") {
-			onChange(navigator.onLine);
-		}
-		setStatus(navigator.onLine);
+const useAxios = (opts, axiosInstance = defaultAxios) => {
+	const [state, setState] = useState({
+		loading: true,
+		error: null,
+		data: null,
+	});
+	const [trigger, setTrigger] = useState(0);
+	const refetch = () => {
+		setState({
+			...state,
+			loading: true,
+		});
+		setTrigger(Date.now());
 	};
-	useEffect(() => {
-		window.addEventListener("online", handleChange);
-		window.addEventListener("offline", handleChange);
-		return () => {
-			window.removeEventListener("online", handleChange);
-			window.removeEventListener("offline", handleChange);
-		};
-	}, []);
-	return status;
+	useEffect(
+		() =>
+			axiosInstance(opts)
+				.then((data) => {
+					setState({
+						...state,
+						loading: false,
+						data,
+					});
+				})
+				.catch((error) => {
+					setState({ ...state, loading: false, error });
+				}),
+
+		[trigger]
+	);
+	if (!opts.url) {
+		return;
+	}
+	return { ...state, refetch };
 };
 
 const App = () => {
-	const handleNetworkChange = (online) => {
-		console.log(online ? "We just went online" : "We just offline");
-	};
-	const onLine = useNetwork(handleNetworkChange);
+	const { loading, data, error, refetch } = useAxios({
+		url: `https://cors-anywhere.herokuapp.com/https://yts.am/api/v2/list_movies.json`,
+	});
+	console.log(
+		`loading : ${loading}\n Error : ${error}\n Data : ${JSON.stringify(
+			data
+		)}`
+	);
 	return (
 		<div className="App">
-			<h1>{onLine ? "OnLine" : "OffLine"}</h1>
+			<h1>{data && data.status}</h1>
+			<h2>{loading && "Loading"}</h2>
+			<button onClick={refetch}>Refetch</button>
 		</div>
 	);
 };
